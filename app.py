@@ -77,8 +77,11 @@ col1.metric("Last reported value", f"{last_actual:,.0f}", help=f"As of {clean_df
 col2.metric(f"Avg forecast (next {horizon}d)", f"{avg_forecast:,.0f}",
             delta=f"{avg_forecast - last_actual:+,.0f}")
 col3.metric("Capacity Breach Probability", f"{breach_prob:.0f}%" if target == "hhs_care" else "N/A")
-best_model_row = metrics_df[(metrics_df.target == target) & (metrics_df.horizon == min(horizon, 14))].sort_values("MAE").iloc[0]
-col4.metric("Best model (by MAE)", best_model_row["model"], help=f"MAE={best_model_row['MAE']:.1f}")
+available_horizons = sorted(metrics_df["horizon"].unique())
+nearest_horizon = min(available_horizons, key=lambda h: abs(h - horizon))
+best_model_row = metrics_df[(metrics_df.target == target) & (metrics_df.horizon == nearest_horizon)].sort_values("MAE").iloc[0]
+col4.metric("Best model (by MAE)", best_model_row["model"],
+            help=f"MAE={best_model_row['MAE']:.1f} (evaluated at {nearest_horizon}-day horizon, nearest to your {horizon}-day selection)")
 
 # ---------- Forecast chart ----------
 st.subheader(f"Future Care Load Forecast — {TARGET_LABELS[target]}")
